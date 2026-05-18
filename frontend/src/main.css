@@ -1,0 +1,196 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #07111f;
+  color: white;
+}
+
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  overflow: hidden;
+}
+
+.header {
+  flex: 0 0 auto;
+}
+
+.subtitle {
+  color: #cbd5e1;
+}
+
+.main {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 480px;
+  gap: 16px;
+}
+
+.globe-area {
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #020617;
+}
+
+.globe-container {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.panel-area {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.info-panel {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #0f1724 0%, #0b1620 100%);
+  padding: 20px;
+  box-shadow: 0 20px 50px rgba(2, 6, 23, 0.6);
+}
+
+.panel {
+  width: 100%;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.panel-header button {
+  border: none;
+  background: #3b82f6;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.panel-header button:hover {
+  background: #2563eb;
+}
+
+.station-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+}
+
+.status-active { background: #059669; }
+.status-closed { background: #6b7280; }
+.status-unknown { background: #4b5563; }
+
+.close-button {
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.close-button:hover { background: rgba(255,255,255,0.03); color: #fff }
+
+.station-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.station-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.station-field.long {
+  background: rgba(255,255,255,0.02);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.station-label {
+  color: #9aa4b2;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.station-value {
+  color: #e6f0ff;
+  font-size: 0.96rem;
+  margin-top: 6px;
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.station-value.empty { color: #7b8793; font-style: italic }
+
+
+.cesium-widget,
+.cesium-widget canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.status {
+  padding: 16px;
+}
+
+.error {
+  color: #ff8a8a;
+}
+
+.footer {
+  flex: 0 0 auto;
+  padding-top: 12px;
+}
