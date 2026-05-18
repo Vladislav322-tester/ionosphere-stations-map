@@ -17,15 +17,16 @@ OUT_FILE = os.path.join(OUT_DIR, 'ionospheric_stations_world.xlsx')
 HEADERS = [
     'Название (URSI)',
     'Код URSI',
-    'Широта',
-    'Долгота',
-    'Интервал работы',
+    'Широта (градусы)',
+    'Долгота (градусы)',
+    'Интервал данных',
     'Метод зондирования',
     'Текущий статус',
     'Дата основания',
     'Организация / Основатель',
     'История аппаратурных комплексов',
     'Действующий комплекс',
+    'Диапазон рабочих частот',
 ]
 
 
@@ -38,38 +39,35 @@ def normalize_code(value: Optional[str]) -> Optional[str]:
     return text.upper()
 
 
+def make_id(name: str, code: str) -> str:
+    import re
+    base = f"{name}_{code}"
+    base = base.lower()
+    # replace non-alphanumeric with underscore
+    base = re.sub(r"[^a-z0-9]+", "_", base)
+    base = base.strip("_")
+    return base
+
+
 def parse_line(fields: List[str]) -> Optional[Dict[str, Any]]:
     if not fields:
         return None
 
     # Remove BOM or whitespace around fields
     fields = [f.strip() for f in fields]
-    fields = [f for f in fields if f != ''] if len(fields) == 1 and fields[0] == '' else fields
-    if len(fields) < 5:
+    # Expected columns (13): №;Название;Код;Широта;Долгота;Интервал данных;Метод;Статус;Дата основания;организация;история;комплекс;частоты
+    if len(fields) < 13:
         return None
 
-    # Expected data rows are either [№, name, code, lat, lon, status]
-    # or may lack the row number: [name, code, lat, lon, status]
-    if len(fields) == 6:
-        _, name, code, lat, lon, status = fields
-    elif len(fields) == 5:
-        name, code, lat, lon, status = fields
-    else:
-        # Handle malformed row with empty first cell
-        if fields[0] == '' and len(fields) >= 6:
-            _, name, code, lat, lon, status = fields[:6]
-        else:
-            # Try to recover from extra separators by taking the last 4 columns as lat/lon/status/code
-            name = fields[1] if fields[0].isdigit() else fields[0]
-            code = fields[2] if fields[0].isdigit() else fields[1]
-            lat = fields[-3]
-            lon = fields[-2]
-            status = fields[-1]
+    # Map by position
+    # allow first column to be index
+    _, name, code, lat, lon, data_interval, method, status_raw, start_year, organization, history, equipment, frequency_range = fields[:13]
 
     code = normalize_code(code)
     if not code:
         return None
 
+    # parse coords
     try:
         latitude = float(lat)
         longitude = float(lon)
@@ -79,23 +77,35 @@ def parse_line(fields: List[str]) -> Optional[Dict[str, Any]]:
     if not name:
         return None
 
+    # normalize status
+    st = status_raw or ''
+    st_low = st.lower()
+    if 'действ' in st_low:
+        status = 'Активна'
+    elif 'закрыт' in st_low:
+        status = 'Закрыта'
+    else:
+        status = st if st.strip() != '' else 'нет данных'
+
+    station_id = make_id(name, code)
+
     return {
-        'id': code.lower(),
+        'id': station_id,
         'name': name,
-        'country': 'нет данных',
+        'code': code,
         'latitude': latitude,
         'longitude': longitude,
+        'data_interval': data_interval or 'нет данных',
+        'method': method or 'нет данных',
+        'status': status,
+        'start_year': start_year or 'нет данных',
+        'organization': organization or 'нет данных',
+        'history': history or 'нет данных',
+        'equipment': equipment or 'нет данных',
+        'frequency_range': frequency_range or 'нет данных',
         'type': 'нет данных',
         'source': 'stations_raw.txt',
         'description': 'нет данных',
-        'code': code,
-        'period': 'нет данных',
-        'method': 'ВЗ',
-        'status': status if status else 'нет данных',
-        'start_year': 'нет данных',
-        'organization': 'нет данных',
-        'history': 'нет данных',
-        'equipment': 'нет данных',
     }
 
 
@@ -131,15 +141,16 @@ def build_rows(stations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             {
                 'Название (URSI)': s.get('name', 'нет данных'),
                 'Код URSI': s.get('code', 'нет данных'),
-                'Широта': s.get('latitude', 'нет данных'),
-                'Долгота': s.get('longitude', 'нет данных'),
-                'Интервал работы': s.get('period', 'нет данных'),
+                'Широта (градусы)': s.get('latitude', 'нет данных'),
+                'Долгота (градусы)': s.get('longitude', 'нет данных'),
+                'Интервал данных': s.get('data_interval') or s.get('period') or 'нет данных',
                 'Метод зондирования': s.get('method', 'нет данных'),
                 'Текущий статус': s.get('status', 'нет данных'),
                 'Дата основания': s.get('start_year', 'нет данных'),
                 'Организация / Основатель': s.get('organization', 'нет данных'),
                 'История аппаратурных комплексов': s.get('history', 'нет данных'),
                 'Действующий комплекс': s.get('equipment', 'нет данных'),
+                'Диапазон рабочих частот': s.get('frequency_range', 'нет данных'),
             }
         )
     return rows
@@ -181,9 +192,26 @@ def write_excel(rows: List[Dict[str, Any]], stations: List[Dict[str, Any]], path
 
 def main():
     stations = load_raw(RAW_PATH)
-    rows = build_rows(stations)
-    write_json(stations, JSON_PATH)
-    write_excel(rows, stations, OUT_FILE)
+
+    # Deduplicate by URSI code (keep first occurrence)
+    seen = set()
+    unique = []
+    for s in stations:
+        code = (s.get('code') or '').strip().upper()
+        if not code:
+            continue
+        if code in seen:
+            continue
+        seen.add(code)
+        # Ensure required keys exist
+        for k in ['name','code','latitude','longitude','data_interval','method','status','start_year','organization','history','equipment','frequency_range','type','source','description','id']:
+            if k not in s:
+                s[k] = 'нет данных'
+        unique.append(s)
+
+    rows = build_rows(unique)
+    write_json(unique, JSON_PATH)
+    write_excel(rows, unique, OUT_FILE)
 
 
 if __name__ == '__main__':

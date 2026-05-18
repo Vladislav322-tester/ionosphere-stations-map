@@ -53,8 +53,8 @@ export default function StationInfoPanel({ station, onClose }: Props) {
         </div>
 
         <div className="station-field">
-          <div className="station-label">Интервал работы</div>
-          <div className={`station-value ${empty((station as any).period) === 'нет данных' ? 'station-value empty' : ''}`}>{empty((station as any).period)}</div>
+          <div className="station-label">Интервал данных</div>
+          <div className={`station-value ${empty((station as any).data_interval || (station as any).period) === 'нет данных' ? 'station-value empty' : ''}`}>{empty((station as any).data_interval || (station as any).period)}</div>
         </div>
 
         <div className="station-field">
@@ -85,6 +85,11 @@ export default function StationInfoPanel({ station, onClose }: Props) {
         <div className="station-field long">
           <div className="station-label">Действующий комплекс</div>
           <div className={`station-value ${empty((station as any).equipment) === 'нет данных' ? 'station-value empty' : ''}`}>{empty((station as any).equipment)}</div>
+        </div>
+
+        <div className="station-field">
+          <div className="station-label">Диапазон рабочих частот</div>
+          <div className={`station-value ${empty((station as any).frequency_range) === 'нет данных' ? 'station-value empty' : ''}`}>{empty((station as any).frequency_range)}</div>
         </div>
       </div>
     </div>

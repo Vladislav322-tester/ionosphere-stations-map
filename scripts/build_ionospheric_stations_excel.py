@@ -59,13 +59,14 @@ def build_rows(stations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             'Код URSI': safe(ursi) if ursi else 'нет данных',
             'Широта (градусы)': s.get('latitude') if s.get('latitude') is not None else 'нет данных',
             'Долгота (градусы)': s.get('longitude') if s.get('longitude') is not None else 'нет данных',
-            'Интервал работы': s.get('period') or s.get('work_interval') or s.get('interval') or 'нет данных',
+            'Интервал данных': s.get('data_interval') or s.get('period') or 'нет данных',
             'Метод зондирования': s.get('method') or s.get('type') or 'нет данных',
             'Текущий статус': s.get('status') or 'нет данных',
             'Дата основания': s.get('start_year') or s.get('founded') or s.get('established') or 'нет данных',
             'Организация / Основатель': s.get('organization') or s.get('source') or 'нет данных',
             'История аппаратурных комплексов': s.get('history') or 'нет данных',
             'Действующий комплекс': s.get('equipment') or s.get('current_equipment') or 'нет данных',
+            'Диапазон рабочих частот': s.get('frequency_range') or 'нет данных',
         }
         rows.append(row)
     return rows
@@ -85,15 +86,16 @@ def write_excel(rows: List[Dict[str, Any]], stations: List[Dict[str, Any]]):
     headers = [
         'Название (URSI)',
         'Код URSI',
-        'Широта',
-        'Долгота',
-        'Интервал работы',
+        'Широта (градусы)',
+        'Долгота (градусы)',
+        'Интервал данных',
         'Метод зондирования',
         'Текущий статус',
         'Дата основания',
         'Организация / Основатель',
         'История аппаратурных комплексов',
         'Действующий комплекс',
+        'Диапазон рабочих частот',
     ]
 
     ws.append(headers)
